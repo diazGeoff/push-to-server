@@ -1,4 +1,4 @@
 push-to-server
 ==============
 
-push the json test case report to the server
+handles the testing the functions and delivering the results to servers
