@@ -17,16 +17,20 @@ var testResults = function testResults( event ) {
                     function (callback) {
                         exec("mocha --reporter spec " + directory + parsedData.testFile, function (error, stdout) {
                             var splitStacktrace = [];
-                            if (error) {
-                                var arrayOfStackTrace = error.message.match(/(at\s.+\d{1}\))/g);
-                                var temp = [];
-                                for (each in arrayOfStackTrace) {
-                                    if (arrayOfStackTrace[each].match(/at\sprocessImmediate/)) {
-                                        temp.push(arrayOfStackTrace[each]);
-                                        splitStacktrace.push(temp);
-                                        temp = [];
-                                    } else {
-                                        temp.push(arrayOfStackTrace[each]);
+                            if ( error ) {
+                                if( error.message.match(/syntaxerror/i) ){
+                                    splitStacktrace.push( error.message );
+                                }else{
+                                    var arrayOfStackTrace = error.message.match(/(at\s.+\d{1}\))/g);
+                                    var temp = [];
+                                    for (each in arrayOfStackTrace) {
+                                        if (arrayOfStackTrace[each].match(/at\sprocessImmediate/)) {
+                                            temp.push(arrayOfStackTrace[each]);
+                                            splitStacktrace.push(temp);
+                                            temp = [];
+                                        } else {
+                                            temp.push(arrayOfStackTrace[each]);
+                                        }
                                     }
                                 }
                             }
@@ -35,12 +39,26 @@ var testResults = function testResults( event ) {
                     },
                     function (callback) {
                         exec("mocha --reporter json " + directory + parsedData.testFile, function (error, stdout) {
-                            callback(null, JSON.parse(stdout));
+                            var error = error ? error.message : "";
+                            stdout = error.match(/syntaxerror/i) ?
+                                stdout = {
+                                    failures: [
+                                        {
+                                            fullTitle: "Node Error",
+                                            err: "Node Error",
+                                            stackTrace: []
+                                        }
+                                    ],
+                                    passes: []
+                                }
+                                :
+                                JSON.parse( stdout );
+                            callback( null, stdout );
                         });
                     }
                 ],
                 function (error, results) {
-                    var status = JSON.stringify(statusFormater( parsedData , results[1] , results[0], filePath), null, 3);
+                    var status = JSON.stringify( statusFormater( parsedData , results[1] , results[0], filePath), null, 3);
                     send(status);
                 });
         }
