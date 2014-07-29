@@ -10,7 +10,7 @@ var harvester = function harvester(filePath) {
     var data = fs.readFileSync(filePath, {encoding: "utf-8"});
     var parsedData = extract(ocfParser(data), "module-configuration");
     return parsedData.testFile ? true : false;
-}
+};
 
 var harvested = harvest(dir.toString(), harvester);
 harvested.forEach(function ( watchFiles ) {
